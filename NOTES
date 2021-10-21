@@ -1,0 +1,18 @@
+Motivated by https://aswinkarthik.github.io/csvdiff/
+
+Requirements:
+
+- compare schema (by header row)
+	- unordered: columns added and removed
+		- set operations
+	- ordered: column moved
+		- traditional diff on two lists
+
+- compare data
+	- do better than line compare
+	- compare with schema
+	- ordered: rows remade to schema
+		- traditional diff on rows
+	- unordered: perhaps with key (ordered subset)
+		- database operations
+	- each pair of rows compared, score by # matched fields
