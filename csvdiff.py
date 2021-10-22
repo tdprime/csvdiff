@@ -5,6 +5,8 @@ import difflib
 import io
 import sys
 
+import termcolor
+
 class ResetStringIO(io.StringIO):
 	def getvalue(self):
 		try:
@@ -12,6 +14,20 @@ class ResetStringIO(io.StringIO):
 		finally:
 			self.seek(0)
 			self.truncate()
+
+def diffprint(line, **kwargs):
+	if line[0] == ' ':
+		print(line, **kwargs)
+	elif line[0] == '+':
+		termcolor.cprint(line, 'green', **kwargs)
+	elif line[0] == '-':
+		termcolor.cprint(line, 'red', **kwargs)
+	elif line[0] == '?':
+		print(line, **kwargs)
+	elif line[0] == '@':
+		termcolor.cprint(line, attrs=['bold'], **kwargs)
+	else:
+		termcolor.cprint(line, attrs=['reverse'], **kwargs)
 
 if __name__ == '__main__':
 	with open(sys.argv[1]) as in1, open(sys.argv[2]) as in2:
@@ -41,8 +57,10 @@ if __name__ == '__main__':
 	print('Schema:')
 	for x in difflib.ndiff(csv1.fieldnames, csv2.fieldnames):
 		if x[0] != '?':
-			print(x)
+			diffprint(x)
 	print('\nRows:')
+	#for x in difflib.unified_diff(data1, data2, n=0,
+	#	fromfile=sys.argv[1], tofile=sys.argv[2]):
 	for x in difflib.ndiff(data1, data2):
 		if x[0] != ' ':
-			print(x, end='')
+			diffprint(x, end='')
