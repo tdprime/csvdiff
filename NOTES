@@ -16,3 +16,18 @@ Requirements:
 	- unordered: perhaps with key (ordered subset)
 		- database operations
 	- each pair of rows compared, score by # matched fields
+
+
+Comments about difflib:
+
+The thing that is not obvious from the documentation, SequenceMatcher is the
+real work-horse.  All the diff output styles are build using that.
+
+The method to focus on is, get_opcodes().  This provides the list of actions to
+transform seq1 into seq2 -- the diffs.
+
+See the source to see examples,
+	find /opt/local/Library/ -name difflib.py
+
+Also interesting are the helper functions for ndiff().  This demonstrates
+using SequenceMatcher for showing diffs within lines.
