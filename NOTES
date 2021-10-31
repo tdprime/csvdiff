@@ -17,6 +17,12 @@ Requirements:
 		- database operations
 	- each pair of rows compared, score by # matched fields
 
+- highlighting
+	- coloured, similar to colordiff
+	- highlight changes within a row
+		- colourize whole column
+		- additional highlight specific character range
+
 
 Comments about difflib:
 
