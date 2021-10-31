@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
+# Copyright 2021 Timothy D. Prime
 
 import csv
 import difflib
-import io
 import operator
 import signal
 import sys
 
+# https://pypi.org/project/termcolor/
 import termcolor
-
-class ResetStringIO(io.StringIO):
-	def getvalue(self):
-		try:
-			return super().getvalue()
-		finally:
-			self.seek(0)
-			self.truncate()
 
 FMT_EQUAL  = lambda x: x
 TOK_EQUAL  = ' '
@@ -98,6 +91,7 @@ def _csvreplace(a, b, alo, ahi, blo, bhi):
 			if best[0] < score[(i,j)]:
 				best = score[(i,j)], i, j
 
+# used to diff schema
 def diffprint(line, **kwargs):
 	if line[0] == ' ':
 		print(line, **kwargs)
