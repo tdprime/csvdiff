@@ -1,2 +1,4 @@
 # csvdiff
-colourized diff for comparing two CSV files
+Colourized diff for comparing two CSV files.
+
+Usage: `csvdiff a.csv b.csv | less -R`
