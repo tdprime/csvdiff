@@ -3,6 +3,7 @@
 import csv
 import difflib
 import io
+import signal
 import sys
 
 import termcolor
@@ -54,6 +55,7 @@ if __name__ == '__main__':
 			data2.append(csvout.getvalue())
 		# print('DEBUG: %s has %d rows' % (sys.argv[2], len(data2)))
 
+	signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 	print('Schema:')
 	for x in difflib.ndiff(csv1.fieldnames, csv2.fieldnames):
 		if x[0] != '?':
