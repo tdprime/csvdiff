@@ -6,6 +6,7 @@ import difflib
 import operator
 import signal
 import sys
+import time
 
 # https://pypi.org/project/termcolor/
 import termcolor
@@ -26,6 +27,7 @@ def csvdiff(a, b):
 		if tag == 'equal':
 			pass
 		elif tag == 'replace':
+			#sys.stdout.write('@@ -%d-%d +%d-%d @@\n' % (alo, ahi, blo, bhi))
 			csvreplace(a, b, alo, ahi, blo, bhi)
 		elif tag == 'insert':
 			for row in b[blo:bhi]:
@@ -37,7 +39,7 @@ def csvdiff(a, b):
 				csvout.writerow(list(map(FMT_DELETE, row)))
 
 # Super simple. Best for ranges with the same length.
-def csvreplace(a, b, alo, ahi, blo, bhi):
+def simple_replace(a, b, alo, ahi, blo, bhi):
 	csvout = csv.writer(sys.stdout)
 	alen = ahi - alo
 	blen = bhi - blo
@@ -82,14 +84,22 @@ def rowcompare(a, b):
 
 # Inspired by ndiff. Take advantage of the data's structure to better inform
 # how they compare.
-def _csvreplace(a, b, alo, ahi, blo, bhi):
-	cutoff = .75 * len(a[0])
-	score = dict()
+def csvreplace(a, b, alo, ahi, blo, bhi):
+	best = (-1, None, None)
 	for j in range(blo, bhi):
 		for i in range(alo, ahi):
-			score[(i,j)] = rowcompare(a[i], b[j])
-			if best[0] < score[(i,j)]:
-				best = score[(i,j)], i, j
+			score = rowcompare(a[i], b[j])
+			if best[0] < score:
+				best = (score, i, j)
+
+	# cutoff is 75%
+	if best[0] < .75 * len(a[0]):
+		simple_replace(a, b, alo, ahi, blo, bhi)
+		return
+
+	csvreplace(a, b, alo, best[1], blo, best[2])
+	simple_replace(a, b, best[1], best[1]+1, best[2], best[2]+1)
+	csvreplace(a, b, best[1]+1, ahi, best[2]+1, bhi)
 
 # used to diff schema
 def diffprint(line, **kwargs):
@@ -128,4 +138,6 @@ if __name__ == '__main__':
 		if x[0] != '?':
 			diffprint(x)
 	print('\nRows:')
+	t_start = time.time()
 	csvdiff(data1, data2)
+	#print('time %0.1fms' % (1000.*(time.time() - t_start)), file=sys.stderr)
