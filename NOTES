@@ -1,6 +1,6 @@
 Motivated by https://aswinkarthik.github.io/csvdiff/
 
-Requirements:
+# Requirements:
 
 - compare schema (by header row)
 	- unordered: columns added and removed
@@ -24,7 +24,7 @@ Requirements:
 		- additional highlight specific character range
 
 
-Comments about difflib:
+# Comments about difflib:
 
 The thing that is not obvious from the documentation, SequenceMatcher is the
 real work-horse.  All the diff output styles are build using that.
@@ -37,3 +37,17 @@ See the source to see examples,
 
 Also interesting are the helper functions for ndiff().  This demonstrates
 using SequenceMatcher for showing diffs within lines.
+
+
+# Some speed metrics:
+
+I was concerned about the speed of my algorithm when replace sets get large.
+Taking two dissimlar files, I did a few tests.
+
+	simple_replace: ~70ms
+	fancy_replace: ~3.5s
+	fancy w/cache: 3.7-5.2s
+	difflib.ndiff: >3min
+
+Obviously, ndiff has serious problems. Since that was the motivation for the
+new code, I am lucky that my CSV row score is working well enough.
