@@ -77,10 +77,7 @@ def simple_replace(a, b, alo, ahi, blo, bhi):
 
 # count matching columns per pair of rows
 def rowcompare(a, b):
-	score = 0
-	for x,y in zip(a, b):
-		score += int(x == y)
-	return score
+	return sum(map(operator.eq, a, b))
 
 # Inspired by ndiff. Take advantage of the data's structure to better inform
 # how they compare.
