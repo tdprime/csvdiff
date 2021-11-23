@@ -39,15 +39,53 @@ Also interesting are the helper functions for ndiff().  This demonstrates
 using SequenceMatcher for showing diffs within lines.
 
 
-# Some speed metrics:
+# Some Speed Metrics:
 
 I was concerned about the speed of my algorithm when replace sets get large.
 Taking two dissimlar files, I did a few tests.
 
-	simple_replace: ~70ms
-	fancy_replace: ~3.5s
-	fancy w/cache: 3.7-5.2s
+	simplereplace: ~30ms
+	fancy_@cutoff: 1.5s (aka try-n-giveup)
+	optim_replace: 2.3s (current algorithm)
+	fancy w/cache: 2.7s
+	f_66%_replace: 3.9s
+	SeqMchr.ratio: 6.7s
 	difflib.ndiff: >3min
 
-Obviously, ndiff has serious problems. Since that was the motivation for the
+Obviously, ndiff has serious problems.  Since that was the motivation for the
 new code, I am lucky that my CSV row score is working well enough.
+
+
+# Algorithm and Output Quality:
+
+I think ndiff was a fair starting point.  However, I want to pause to formally
+describe the problem and its goals.
+
+We already have a score function appropriate for the domain that differs from
+SequenceMatcher.ratio().  This treats columns with some importance, to compare
+data of the same kind.  This structure is a property of the CSV data.
+
+Insert and delete operations seem straight forward.  So, the algorithm of
+interest handles replacement.  Given two sequences, A and B, how to interleave
+them as a single sequence of delete (one line from A), insert (one line from
+B), replace (one line from each of A and B)?
+
+Think about generating strings on {a, b} with len(A) a's and len(B) b's.  Each
+instance of "ab" is replace.  An unpaired a is delete; unpaired b is insert.
+
+This can be thought of as an optimization problem.  Maximize the sum total
+score of the sequence where delete and insert score zero and replace score is
+rowcompare(a_i, b_j).
+
+If we wish to organize this search to take advantage of pruning, it is
+important to prioritize sequences with more "ab" pairs.  Let p = min(len(A),
+len(B)) and q = max(len(A), len(B)) - p.  Generate strings on {c, d} with p c's
+and q d's.  Each c <-> "ab" and d <-> len(A) > len(B) ? a : b.
+
+When splitting an "ab" pair, how to enforce an unpaired arrangement?  Perhaps,
+grafting onto symbols, for example "aab" and "abb".  Then c is not a fixed
+size; it becomes any sequence with exactly one "ab" pair.
+
+Here is another strategy.  Augment (p, q) to (p', q, r) with p' pairs, q
+unpaired, and r split pairs.  Generate the string on {c, d} as before, p-r c's
+and q+r d's.  Then, generate partitions of r with at most p'+1 parts.

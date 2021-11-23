@@ -76,27 +76,78 @@ def simple_replace(a, b, alo, ahi, blo, bhi):
 		blen -= 1
 
 # count matching columns per pair of rows
+#
+# Turn on cache for "ndiff" style. Yes, it's big.
+#@functools.lru_cache(maxsize=1<<20)
 def rowcompare(a, b):
 	return sum(map(operator.eq, a, b))
 
 # Inspired by ndiff. Take advantage of the data's structure to better inform
 # how they compare.
-def csvreplace(a, b, alo, ahi, blo, bhi):
-	best = (-1, None, None)
+#
+# Using rowcompare() is ~2x the speed of SequenceMatcher.ratio()
+def fancy_replace(a, b, alo, ahi, blo, bhi):
+	# cutoff is 66%
+	best = (len(a[0]) * .66, None, None)
 	for j in range(blo, bhi):
 		for i in range(alo, ahi):
 			score = rowcompare(a[i], b[j])
 			if best[0] < score:
 				best = (score, i, j)
-
-	# cutoff is 75%
-	if best[0] < .75 * len(a[0]):
+	if best[1] is None:
 		simple_replace(a, b, alo, ahi, blo, bhi)
 		return
-
-	csvreplace(a, b, alo, best[1], blo, best[2])
+	fancy_replace(a, b, alo, best[1], blo, best[2])
 	simple_replace(a, b, best[1], best[1]+1, best[2], best[2]+1)
-	csvreplace(a, b, best[1]+1, ahi, best[2]+1, bhi)
+	fancy_replace(a, b, best[1]+1, ahi, best[2]+1, bhi)
+
+# Search for the best total score for arranging a[alo:ahi] and b[blo:bhi].
+# Imagine using a recursive algorithm, each step is one of three actions: print
+# a[alo] (delete), b[blo] (insert), or both as a replacement.  Replacements are
+# scored by rowcompare(). Other actions are zero.
+
+def csvreplace(a, b, alo, ahi, blo, bhi):
+	# Build a table of scores on the tuple (i, ahi, j, bhi), later abbreviated
+	# as (i, j). As i->alo and j->blo, values derived from previous
+	# calculations. Finally arriving at the score for (alo, ahi, blo, bhi).
+	best = dict()
+	isrep = dict()
+	for j in reversed(range(blo, bhi)):
+		for i in reversed(range(alo, ahi)):
+			do_delete = best.get((i+1, j), 0)
+			do_insert = best.get((i, j+1), 0)
+			do_both = best.get((i+1, j+1), 0)
+			do_both += rowcompare(a[i], b[j])
+			if do_both >= do_delete:
+				if do_both >= do_insert:
+					best[i, j] = do_both
+					isrep[i, j] = True
+				else:
+					best[i, j] = do_insert
+			else:
+				if do_delete > do_insert:
+					best[i, j] = do_delete
+				else:
+					best[i, j] = do_insert
+
+	# Walk a path through the table to print the results.
+	i, j = alo, blo
+	while i < ahi and j < bhi:
+		print("DEBUG: i=%d, j=%d" % (i, j))
+		if isrep.get((i, j)):
+			simple_replace(a, b, i, i+1, j, j+1)
+			i += 1
+			j += 1
+		else:
+			do_delete = best.get((i+1, j), 0)
+			do_insert = best.get((i, j+1), 0)
+			if do_delete > do_insert:
+				simple_replace(a, b, i, i+1, j, j)
+				i += 1
+			else:
+				simple_replace(a, b, i, i, j, j+1)
+				j += 1
+	simple_replace(a, b, i, ahi, j, bhi)
 
 # used to diff schema
 def diffprint(line, **kwargs):
@@ -138,3 +189,4 @@ if __name__ == '__main__':
 	t_start = time.time()
 	csvdiff(data1, data2)
 	#print('time %0.1fms' % (1000.*(time.time() - t_start)), file=sys.stderr)
+	#print(rowcompare.cache_info(), file=sys.stderr)
