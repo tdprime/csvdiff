@@ -133,7 +133,7 @@ def csvreplace(a, b, alo, ahi, blo, bhi):
 	# Walk a path through the table to print the results.
 	i, j = alo, blo
 	while i < ahi and j < bhi:
-		print("DEBUG: i=%d, j=%d" % (i, j))
+		#print("DEBUG: i=%d, j=%d" % (i, j))
 		if isrep.get((i, j)):
 			simple_replace(a, b, i, i+1, j, j+1)
 			i += 1
@@ -175,7 +175,7 @@ if __name__ == '__main__':
 		# Keep the order of the "new" CSV.
 		schema = set(csv1.fieldnames)
 		schema = tuple(filter(lambda x: x in schema, csv2.fieldnames))
-		# print('DEBUG: schema = [%s]' % (','.join(schema)))
+		#print('DEBUG: schema = [%s]' % (','.join(schema)))
 		# Using tuple as a hashable (immutable) Row type.
 		hrow = operator.itemgetter(*schema)
 		data1 = list(map(hrow, csv1))
