@@ -80,7 +80,9 @@ def simple_replace(a, b, alo, ahi, blo, bhi):
 # Turn on cache for "ndiff" style. Yes, it's big.
 #@functools.lru_cache(maxsize=1<<20)
 def rowcompare(a, b):
-	return sum(map(operator.eq, a, b))
+	result = sum(map(operator.eq, a, b))
+	result /= len(a)
+	return result * result
 
 # Inspired by ndiff. Take advantage of the data's structure to better inform
 # how they compare.
