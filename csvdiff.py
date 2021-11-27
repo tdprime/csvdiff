@@ -75,14 +75,16 @@ def simple_replace(a, b, alo, ahi, blo, bhi):
 		j += 1
 		blen -= 1
 
-# count matching columns per pair of rows
+# Count matching columns per pair of rows.  Return as a ratio, 0-1.
 #
+# csvreplace() will minimize total number of cells that differ for the whole
+# output.  Attempt to resolve ties by the square of the result.
+ 
 # Turn on cache for "ndiff" style. Yes, it's big.
 #@functools.lru_cache(maxsize=1<<20)
 def rowcompare(a, b):
-	result = sum(map(operator.eq, a, b))
-	result /= len(a)
-	return result * result
+	result = sum(map(operator.eq, a, b)) / len(a)
+	return result * (1 + result) / 2
 
 # Inspired by ndiff. Take advantage of the data's structure to better inform
 # how they compare.
