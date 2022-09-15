@@ -171,7 +171,8 @@ def diffprint(line, **kwargs):
 if __name__ == '__main__':
 	signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
-	with open(sys.argv[1]) as in1, open(sys.argv[2]) as in2:
+	with open(sys.argv[1], encoding='utf_8_sig') as in1, \
+	  open(sys.argv[2], encoding='utf_8_sig') as in2:
 		csv1 = csv.DictReader(in1)
 		csv2 = csv.DictReader(in2)
 
