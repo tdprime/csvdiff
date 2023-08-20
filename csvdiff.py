@@ -10,6 +10,11 @@ import time
 
 # https://pypi.org/project/termcolor/
 import termcolor
+# work around restrictive constraint in library
+# does: os.isatty(sys.stdout.isatty())
+# better: any(map(os.isatty, map(fileno, (sys.stdin, sys.stdout, sys.stderr))))
+def _can_do_colour(**kwargs): return True
+termcolor.termcolor._can_do_colour = _can_do_colour
 
 FMT_EQUAL  = lambda x: x
 TOK_EQUAL  = ' '
